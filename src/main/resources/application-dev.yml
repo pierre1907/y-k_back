@@ -1,0 +1,9 @@
+spring:
+  jpa:
+    show-sql: true
+
+logging:
+  level:
+    com.yk.back: DEBUG
+    org.springframework.security: DEBUG
+    org.flywaydb: INFO
