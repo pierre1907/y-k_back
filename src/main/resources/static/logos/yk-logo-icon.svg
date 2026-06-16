@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110" fill="none">
+  <defs>
+    <linearGradient id="navyA" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#0f2152"/>
+    </linearGradient>
+    <linearGradient id="tealA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#0891b2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Y left arm (diagonal wedge, upper-left → center) -->
+  <polygon points="4,4 28,4 60,56 42,56" fill="url(#navyA)"/>
+
+  <!-- Y right arm (diagonal wedge, upper-right → center) -->
+  <polygon points="116,4 92,4 60,56 78,56" fill="url(#navyA)"/>
+
+  <!-- K vertical stem (center going down) -->
+  <polygon points="60,56 78,56 78,104 60,104" fill="url(#navyA)"/>
+
+  <!-- K upper arm (going right from center) -->
+  <polygon points="72,60 116,22 116,36 76,74" fill="url(#navyA)"/>
+
+  <!-- K lower arm (going right from center) -->
+  <polygon points="72,80 116,104 110,104 68,82" fill="url(#navyA)"/>
+
+  <!-- Teal bar chart accent (bottom-left) -->
+  <rect x="4" y="86" width="11" height="18" rx="2" fill="url(#tealA)"/>
+  <rect x="18" y="76" width="11" height="28" rx="2" fill="url(#tealA)"/>
+  <rect x="32" y="66" width="11" height="38" rx="2" fill="url(#tealA)"/>
+</svg>
