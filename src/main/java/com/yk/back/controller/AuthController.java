@@ -21,29 +21,26 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @Operation(summary = "Connexion", description = "Retourne access token + refresh token. tenantSlug obligatoire pour les merchant users.")
+    @Operation(summary = "Connexion", description = "Retourne access + refresh token à plat (standard JWT). tenantSlug obligatoire pour les merchant/tenant users.")
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(
+    public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest
     ) {
-        LoginResponse response = authService.login(request, httpRequest);
-        return ResponseEntity.ok(ApiResponse.ok("Connexion réussie", response));
+        return ResponseEntity.ok(authService.login(request, httpRequest));
     }
 
     @Operation(summary = "Rafraîchir le token")
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<LoginResponse>> refresh(
+    public ResponseEntity<LoginResponse> refresh(
             @Valid @RequestBody RefreshTokenRequest request
     ) {
-        LoginResponse response = authService.refresh(request);
-        return ResponseEntity.ok(ApiResponse.ok(response));
+        return ResponseEntity.ok(authService.refresh(request));
     }
 
     @Operation(summary = "Déconnexion", description = "Stateless — le client supprime ses tokens côté front.")
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout() {
-        // Stateless JWT : le client supprime ses tokens côté front
         return ResponseEntity.ok(ApiResponse.ok("Déconnexion réussie", null));
     }
 }
