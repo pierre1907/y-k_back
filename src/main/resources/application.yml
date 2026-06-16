@@ -28,6 +28,22 @@ spring:
   security:
     require-ssl: false
 
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_SMTP_AUTH:false}
+          starttls:
+            enable: ${MAIL_SMTP_STARTTLS:false}
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
 server:
   port: ${PORT:8080}
   servlet:
@@ -49,6 +65,10 @@ app:
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+  mail:
+    from: ${MAIL_FROM:noreply@yk-platform.com}
+    from-name: ${MAIL_FROM_NAME:Y&K Platform}
+    base-url: ${APP_BASE_URL:http://localhost:3000}
 
 springdoc:
   api-docs:
