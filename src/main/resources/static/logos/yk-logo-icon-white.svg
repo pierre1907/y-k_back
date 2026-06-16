@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110" fill="none">
+  <!-- White version of icon mark — for dark backgrounds -->
+
+  <!-- Y left arm -->
+  <polygon points="4,4 28,4 60,56 42,56" fill="#ffffff"/>
+  <!-- Y right arm -->
+  <polygon points="116,4 92,4 60,56 78,56" fill="#ffffff"/>
+  <!-- K vertical stem -->
+  <polygon points="60,56 78,56 78,104 60,104" fill="#ffffff"/>
+  <!-- K upper arm -->
+  <polygon points="72,60 116,22 116,36 76,74" fill="#ffffff"/>
+  <!-- K lower arm -->
+  <polygon points="72,80 116,104 110,104 68,82" fill="#ffffff"/>
+
+  <!-- Teal bar chart accent -->
+  <rect x="4" y="86" width="11" height="18" rx="2" fill="#22d3ee"/>
+  <rect x="18" y="76" width="11" height="28" rx="2" fill="#22d3ee"/>
+  <rect x="32" y="66" width="11" height="38" rx="2" fill="#22d3ee"/>
+</svg>

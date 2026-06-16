@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" fill="none">
+  <defs>
+    <linearGradient id="navyB" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#0f2152"/>
+    </linearGradient>
+    <linearGradient id="tealB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#0891b2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ── ICON MARK (scaled to 110×110, left-padded 5) ── -->
+  <g transform="translate(5,5) scale(0.9)">
+    <!-- Y left arm -->
+    <polygon points="4,4 28,4 60,56 42,56" fill="url(#navyB)"/>
+    <!-- Y right arm -->
+    <polygon points="116,4 92,4 60,56 78,56" fill="url(#navyB)"/>
+    <!-- K vertical stem -->
+    <polygon points="60,56 78,56 78,104 60,104" fill="url(#navyB)"/>
+    <!-- K upper arm -->
+    <polygon points="72,60 116,22 116,36 76,74" fill="url(#navyB)"/>
+    <!-- K lower arm -->
+    <polygon points="72,80 116,104 110,104 68,82" fill="url(#navyB)"/>
+    <!-- Teal bar chart accent -->
+    <rect x="4" y="86" width="11" height="18" rx="2" fill="url(#tealB)"/>
+    <rect x="18" y="76" width="11" height="28" rx="2" fill="url(#tealB)"/>
+    <rect x="32" y="66" width="11" height="38" rx="2" fill="url(#tealB)"/>
+  </g>
+
+  <!-- ── TEXT (dark version — for light backgrounds) ── -->
+  <!-- Y&K -->
+  <text x="130" y="72" font-family="'Segoe UI', 'Inter', Arial, sans-serif"
+        font-weight="800" font-size="54" letter-spacing="-1" fill="#0f2152">Y&amp;K</text>
+
+  <!-- Divider line -->
+  <line x1="130" y1="85" x2="470" y2="85" stroke="#0f2152" stroke-width="1.5" opacity="0.25"/>
+
+  <!-- CLOSING PLATFORM -->
+  <text x="135" y="104" font-family="'Segoe UI', 'Inter', Arial, sans-serif"
+        font-weight="500" font-size="15" letter-spacing="6" fill="#1e3a8a" opacity="0.75">CLOSING PLATFORM</text>
+</svg>
