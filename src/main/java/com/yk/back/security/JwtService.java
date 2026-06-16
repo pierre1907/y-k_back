@@ -2,7 +2,6 @@ package com.yk.back.security;
 
 import com.yk.back.config.AppProperties;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -87,7 +86,8 @@ public class JwtService {
     }
 
     private SecretKey secretKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(appProperties.getJwt().getSecret());
+        byte[] keyBytes = appProperties.getJwt().getSecret()
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

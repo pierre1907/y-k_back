@@ -1,8 +1,8 @@
 # setup-dev.ps1 — recree application-dev.yml depuis le template
 # A lancer une fois apres un clone ou un checkout si le fichier est absent
 
-$target = "src\main\resources\application-dev.yml"
-$example = "src\main\resources\application-dev.yml.example"
+$target = "src\main\resources\application-dev.properties"
+$example = "src\main\resources\application-dev.properties.example"
 
 if (Test-Path $target) {
     Write-Host "application-dev.yml deja present." -ForegroundColor Green
