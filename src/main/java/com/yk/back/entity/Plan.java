@@ -6,26 +6,36 @@ import lombok.Builder.Default;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tenants")
+@Table(name = "plans")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Tenant {
+public class Plan {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true, length = 100)
     private String name;
 
-    @Column(nullable = false, unique = true, length = 100)
-    private String slug;
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
-    @Column(name = "contact_email")
-    private String contactEmail;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
+
+    @Column(name = "billing_cycle", nullable = false, length = 20)
+    private String billingCycle;
+
+    @Column(name = "max_merchants")
+    private Integer maxMerchants;
+
+    @Column(name = "max_users_per_merchant")
+    private Integer maxUsersPerMerchant;
 
     @Default
     @Column(nullable = false)

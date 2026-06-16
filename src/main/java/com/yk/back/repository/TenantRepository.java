@@ -11,4 +11,6 @@ import java.util.UUID;
 public interface TenantRepository extends JpaRepository<Tenant, UUID> {
     Optional<Tenant> findBySlug(String slug);
     boolean existsBySlug(String slug);
+    boolean existsByName(String name);
+    long countByIsActiveTrue();
 }
