@@ -22,6 +22,9 @@ public class TenantUser {
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenant tenant;
 
+    @Column(name = "full_name")
+    private String fullName;
+
     @Column(nullable = false)
     private String email;
 
