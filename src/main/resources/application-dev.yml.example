@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/yk_db
+    username: postgres
+    password: YOUR_LOCAL_DEV_PASSWORD
+
+  jpa:
+    show-sql: true
+
+  mail:
+    host: localhost
+    port: 1025
+    username: ''
+    password: ''
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+logging:
+  level:
+    com.yk.back: DEBUG
+    org.springframework.security: DEBUG
+    org.flywaydb: INFO
+    org.springframework.mail: DEBUG
