@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Compact favicon — fits in 32x32 and 16x16 -->
+  <rect width="32" height="32" rx="6" fill="#0f2152"/>
+
+  <!-- Simplified YK mark (scaled down) -->
+  <!-- Y left arm -->
+  <polygon points="2,3 9,3 17,15 12,15" fill="#ffffff"/>
+  <!-- Y right arm -->
+  <polygon points="30,3 23,3 17,15 22,15" fill="#ffffff"/>
+  <!-- K vertical stem (Y stem) -->
+  <polygon points="15,15 20,15 20,29 15,29" fill="#ffffff"/>
+  <!-- K upper arm -->
+  <polygon points="19,17 30,9 30,13 21,21" fill="#ffffff"/>
+  <!-- K lower arm -->
+  <polygon points="19,21 29,29 27,29 17,22" fill="#ffffff"/>
+
+  <!-- Teal dots (simplified bar chart for tiny sizes) -->
+  <rect x="2" y="24" width="3" height="5" rx="1" fill="#22d3ee"/>
+  <rect x="6" y="22" width="3" height="7" rx="1" fill="#22d3ee"/>
+  <rect x="10" y="20" width="3" height="9" rx="1" fill="#22d3ee"/>
+</svg>
