@@ -33,7 +33,7 @@ public class JwtService {
     private String buildToken(UUID userId, String email, UUID tenantId, UUID merchantId, String role, long ttl) {
         Map<String, Object> claims = new java.util.HashMap<>();
         claims.put("userId", userId.toString());
-        claims.put("tenantId", tenantId.toString());
+        if (tenantId != null) claims.put("tenantId", tenantId.toString());
         if (merchantId != null) claims.put("merchantId", merchantId.toString());
         claims.put("role", role);
 
@@ -73,7 +73,8 @@ public class JwtService {
     }
 
     public UUID extractTenantId(String token) {
-        return UUID.fromString((String) extractAllClaims(token).get("tenantId"));
+        Object val = extractAllClaims(token).get("tenantId");
+        return val != null ? UUID.fromString((String) val) : null;
     }
 
     public UUID extractMerchantId(String token) {
