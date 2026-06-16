@@ -1,0 +1,17 @@
+spring.datasource.url=jdbc:postgresql://localhost:5432/yk_db
+spring.datasource.username=postgres
+spring.datasource.password=YOUR_LOCAL_DEV_PASSWORD
+
+spring.jpa.show-sql=true
+
+spring.mail.host=localhost
+spring.mail.port=1025
+spring.mail.username=
+spring.mail.password=
+spring.mail.properties.mail.smtp.auth=false
+spring.mail.properties.mail.smtp.starttls.enable=false
+
+logging.level.com.yk.back=DEBUG
+logging.level.org.springframework.security=DEBUG
+logging.level.org.flywaydb=INFO
+logging.level.org.springframework.mail=DEBUG
