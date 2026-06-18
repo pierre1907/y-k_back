@@ -72,7 +72,7 @@ public class OrderController {
     public ResponseEntity<ApiResponse<OrderResponse>> cancel(
             @PathVariable UUID id,
             @AuthenticationPrincipal AuthenticatedUser user) {
-        return ResponseEntity.ok(ApiResponse.ok(orderService.cancel(id, user.tenantId())));
+        return ResponseEntity.ok(ApiResponse.ok(orderService.cancel(id, user.tenantId(), user.userId())));
     }
 
     // ── Merchant-scoped endpoints ────────────────────────────────────────────
