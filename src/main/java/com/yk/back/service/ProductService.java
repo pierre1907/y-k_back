@@ -121,6 +121,13 @@ public class ProductService {
                 .map(StockMovementResponse::from).toList();
     }
 
+    public List<StockMovementResponse> listMovementsForMerchant(UUID productId, UUID merchantId, UUID tenantId) {
+        productRepository.findByIdAndMerchantIdAndTenantId(productId, merchantId, tenantId)
+                .orElseThrow(() -> new ForbiddenException("Produit introuvable ou accès refusé"));
+        return stockMovementRepository.findAllByProductIdOrderByCreatedAtDesc(productId).stream()
+                .map(StockMovementResponse::from).toList();
+    }
+
     private Product findOrThrow(UUID id, UUID tenantId) {
         return productRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ForbiddenException("Produit introuvable ou accès refusé"));
