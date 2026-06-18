@@ -27,6 +27,7 @@ public class TenantService {
     private final SubscriptionRepository subscriptionRepository;
     private final MailService mailService;
 
+    @Transactional(readOnly = true)
     public List<TenantResponse> listAll() {
         return tenantRepository.findAll().stream()
                 .map(t -> {
@@ -40,6 +41,7 @@ public class TenantService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public TenantResponse getById(UUID id) {
         Tenant tenant = findOrThrow(id);
         long count = merchantRepository.findAllByTenantId(id).size();
