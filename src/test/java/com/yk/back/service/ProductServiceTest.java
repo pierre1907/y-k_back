@@ -244,4 +244,37 @@ class ProductServiceTest {
         assertThatThrownBy(() -> productService.listMovements(id, tenantId))
                 .isInstanceOf(ForbiddenException.class);
     }
+
+    @Test
+    void listMovementsForMerchant_productBelongsToAnotherMerchant_throwsForbidden() {
+        UUID id = UUID.randomUUID();
+        when(productRepository.findByIdAndMerchantIdAndTenantId(id, merchantId, tenantId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> productService.listMovementsForMerchant(id, merchantId, tenantId))
+                .isInstanceOf(ForbiddenException.class);
+
+        verify(stockMovementRepository, never()).findAllByProductIdOrderByCreatedAtDesc(any());
+    }
+
+    @Test
+    void listMovementsForMerchant_ownProduct_returnsMovements() {
+        Product existing = buildProduct(UUID.randomUUID());
+        StockMovement movement = StockMovement.builder()
+                .id(UUID.randomUUID())
+                .product(existing)
+                .type(StockMovement.Type.IN)
+                .quantity(4)
+                .createdAt(java.time.OffsetDateTime.now())
+                .build();
+        when(productRepository.findByIdAndMerchantIdAndTenantId(existing.getId(), merchantId, tenantId))
+                .thenReturn(Optional.of(existing));
+        when(stockMovementRepository.findAllByProductIdOrderByCreatedAtDesc(existing.getId()))
+                .thenReturn(List.of(movement));
+
+        var result = productService.listMovementsForMerchant(existing.getId(), merchantId, tenantId);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).quantity()).isEqualTo(4);
+    }
 }

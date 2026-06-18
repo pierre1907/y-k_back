@@ -13,6 +13,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     List<Product> findAllByTenantIdOrderByNameAsc(UUID tenantId);
     List<Product> findAllByMerchantIdAndTenantIdOrderByNameAsc(UUID merchantId, UUID tenantId);
     Optional<Product> findByIdAndTenantId(UUID id, UUID tenantId);
+    Optional<Product> findByIdAndMerchantIdAndTenantId(UUID id, UUID merchantId, UUID tenantId);
     boolean existsBySkuAndTenantId(String sku, UUID tenantId);
     long countByTenantId(UUID tenantId);
 }

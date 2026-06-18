@@ -119,4 +119,14 @@ public class ProductController {
             @AuthenticationPrincipal AuthenticatedUser user) {
         return ResponseEntity.ok(ApiResponse.ok(productService.getById(id, user.tenantId())));
     }
+
+    @GetMapping("/merchant/products/{id}/stock")
+    @PreAuthorize("hasAnyRole('MERCHANT_ADMIN','MERCHANT_USER')")
+    @Operation(summary = "Historique des mouvements de stock (merchant)")
+    public ResponseEntity<ApiResponse<List<StockMovementResponse>>> movementsForMerchant(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal AuthenticatedUser user) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                productService.listMovementsForMerchant(id, user.merchantId(), user.tenantId())));
+    }
 }
