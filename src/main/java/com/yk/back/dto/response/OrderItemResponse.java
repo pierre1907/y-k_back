@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record OrderItemResponse(
         UUID id,
+        UUID productId,
         String name,
         String sku,
         int quantity,
@@ -15,7 +16,7 @@ public record OrderItemResponse(
 ) {
     public static OrderItemResponse from(OrderItem i) {
         return new OrderItemResponse(
-                i.getId(), i.getName(), i.getSku(),
+                i.getId(), i.getProduct() != null ? i.getProduct().getId() : null, i.getName(), i.getSku(),
                 i.getQuantity(), i.getUnitPrice(), i.getTotalPrice()
         );
     }
