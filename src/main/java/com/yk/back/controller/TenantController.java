@@ -1,5 +1,6 @@
 package com.yk.back.controller;
 
+import com.yk.back.dto.request.SetActiveMerchantRequest;
 import com.yk.back.dto.response.ApiResponse;
 import com.yk.back.dto.response.MerchantResponse;
 import com.yk.back.dto.response.TenantDashboardResponse;
@@ -9,13 +10,12 @@ import com.yk.back.service.TenantContextService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -51,5 +51,24 @@ public class TenantController {
             @AuthenticationPrincipal AuthenticatedUser user
     ) {
         return ResponseEntity.ok(ApiResponse.ok(tenantContextService.getMerchants(user.tenantId())));
+    }
+
+    @Operation(summary = "Merchant actuellement sélectionné par l'utilisateur")
+    @GetMapping("/active-merchant")
+    public ResponseEntity<ApiResponse<MerchantResponse>> getActiveMerchant(
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                tenantContextService.getActiveMerchant(user.tenantId(), user.userId())));
+    }
+
+    @Operation(summary = "Changer le merchant actif de l'utilisateur")
+    @PatchMapping("/active-merchant")
+    public ResponseEntity<ApiResponse<MerchantResponse>> setActiveMerchant(
+            @Valid @RequestBody SetActiveMerchantRequest request,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        return ResponseEntity.ok(ApiResponse.ok("Merchant actif mis à jour",
+                tenantContextService.setActiveMerchant(user.tenantId(), user.userId(), request.merchantId())));
     }
 }
