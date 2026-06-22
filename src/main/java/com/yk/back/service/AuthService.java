@@ -5,12 +5,15 @@ import com.yk.back.dto.request.LoginRequest;
 import com.yk.back.dto.request.RefreshTokenRequest;
 import com.yk.back.dto.response.LoginResponse;
 import com.yk.back.entity.MerchantUser;
+import com.yk.back.entity.PasswordResetToken;
 import com.yk.back.entity.PlatformAdmin;
 import com.yk.back.entity.Tenant;
 import com.yk.back.entity.TenantUser;
+import com.yk.back.exception.BusinessException;
 import com.yk.back.exception.ResourceNotFoundException;
 import com.yk.back.exception.UnauthorizedException;
 import com.yk.back.repository.MerchantUserRepository;
+import com.yk.back.repository.PasswordResetTokenRepository;
 import com.yk.back.repository.PlatformAdminRepository;
 import com.yk.back.repository.TenantRepository;
 import com.yk.back.repository.TenantUserRepository;
@@ -19,9 +22,14 @@ import com.yk.back.service.mail.MailService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
+import java.time.OffsetDateTime;
+import java.util.Base64;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,15 +39,18 @@ import java.util.UUID;
 public class AuthService {
 
     private static final String ROLE_PLATFORM_ADMIN = "PLATFORM_ADMIN";
+    private static final long RESET_TOKEN_VALIDITY_MINUTES = 60;
 
     private final TenantUserRepository tenantUserRepository;
     private final MerchantUserRepository merchantUserRepository;
     private final TenantRepository tenantRepository;
     private final PlatformAdminRepository platformAdminRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
     private final AppProperties appProperties;
+    private final SecureRandom secureRandom = new SecureRandom();
 
     public LoginResponse login(LoginRequest request, HttpServletRequest httpRequest) {
         String ip = getClientIp(httpRequest);
@@ -97,6 +108,93 @@ public class AuthService {
         }
 
         throw new UnauthorizedException("Identifiants incorrects");
+    }
+
+    public void forgotPassword(String email) {
+        Optional<String> fullName = resolveFullNameByEmail(email);
+        if (fullName.isEmpty()) {
+            // Don't reveal whether the email is registered.
+            log.debug("Password reset requested for unknown email {}", email);
+            return;
+        }
+
+        String token = generateToken();
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .email(email)
+                .token(token)
+                .expiresAt(OffsetDateTime.now().plusMinutes(RESET_TOKEN_VALIDITY_MINUTES))
+                .used(false)
+                .build();
+        passwordResetTokenRepository.save(resetToken);
+
+        mailService.sendPasswordReset(email, fullName.get(), token);
+    }
+
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new BusinessException("Lien de réinitialisation invalide", HttpStatus.BAD_REQUEST));
+
+        if (resetToken.isUsed() || resetToken.getExpiresAt().isBefore(OffsetDateTime.now())) {
+            throw new BusinessException("Lien de réinitialisation invalide ou expiré", HttpStatus.BAD_REQUEST);
+        }
+
+        String email = resetToken.getEmail();
+        String encoded = passwordEncoder.encode(newPassword);
+        String fullName = applyNewPassword(email, encoded)
+                .orElseThrow(() -> new BusinessException("Lien de réinitialisation invalide", HttpStatus.BAD_REQUEST));
+
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
+
+        mailService.sendPasswordChanged(email, fullName);
+    }
+
+    private Optional<String> resolveFullNameByEmail(String email) {
+        Optional<PlatformAdmin> admin = platformAdminRepository.findByEmail(email);
+        if (admin.isPresent()) return Optional.of(admin.get().getFullName());
+
+        Optional<TenantUser> tenantUser = tenantUserRepository.findByEmail(email);
+        if (tenantUser.isPresent()) return Optional.of(tenantUser.get().getFullName());
+
+        Optional<MerchantUser> merchantUser = merchantUserRepository.findByEmail(email);
+        if (merchantUser.isPresent()) return Optional.of(merchantUser.get().getFullName());
+
+        return Optional.empty();
+    }
+
+    private Optional<String> applyNewPassword(String email, String encodedPassword) {
+        Optional<PlatformAdmin> admin = platformAdminRepository.findByEmail(email);
+        if (admin.isPresent()) {
+            PlatformAdmin a = admin.get();
+            a.setPassword(encodedPassword);
+            platformAdminRepository.save(a);
+            return Optional.of(a.getFullName());
+        }
+
+        Optional<TenantUser> tenantUser = tenantUserRepository.findByEmail(email);
+        if (tenantUser.isPresent()) {
+            TenantUser u = tenantUser.get();
+            u.setPassword(encodedPassword);
+            tenantUserRepository.save(u);
+            return Optional.of(u.getFullName());
+        }
+
+        Optional<MerchantUser> merchantUser = merchantUserRepository.findByEmail(email);
+        if (merchantUser.isPresent()) {
+            MerchantUser u = merchantUser.get();
+            u.setPassword(encodedPassword);
+            merchantUserRepository.save(u);
+            return Optional.of(u.getFullName());
+        }
+
+        return Optional.empty();
+    }
+
+    private String generateToken() {
+        byte[] bytes = new byte[32];
+        secureRandom.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
     public LoginResponse refresh(RefreshTokenRequest request) {

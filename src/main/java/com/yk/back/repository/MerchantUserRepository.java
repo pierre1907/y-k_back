@@ -12,6 +12,7 @@ import java.util.UUID;
 public interface MerchantUserRepository extends JpaRepository<MerchantUser, UUID> {
     Optional<MerchantUser> findByEmailAndMerchantId(String email, UUID merchantId);
     Optional<MerchantUser> findByEmailAndTenantId(String email, UUID tenantId);
+    Optional<MerchantUser> findByEmail(String email);
     boolean existsByEmailAndMerchantId(String email, UUID merchantId);
     List<MerchantUser> findAllByTenantId(UUID tenantId);
     List<MerchantUser> findAllByMerchantIdAndTenantId(UUID merchantId, UUID tenantId);
