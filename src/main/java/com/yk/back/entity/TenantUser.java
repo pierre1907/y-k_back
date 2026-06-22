@@ -22,6 +22,10 @@ public class TenantUser {
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenant tenant;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "active_merchant_id")
+    private Merchant activeMerchant;
+
     @Column(name = "full_name")
     private String fullName;
 
