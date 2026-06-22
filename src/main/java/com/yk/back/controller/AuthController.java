@@ -1,7 +1,9 @@
 package com.yk.back.controller;
 
+import com.yk.back.dto.request.ForgotPasswordRequest;
 import com.yk.back.dto.request.LoginRequest;
 import com.yk.back.dto.request.RefreshTokenRequest;
+import com.yk.back.dto.request.ResetPasswordRequest;
 import com.yk.back.dto.response.ApiResponse;
 import com.yk.back.dto.response.LoginResponse;
 import com.yk.back.service.AuthService;
@@ -42,5 +44,20 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout() {
         return ResponseEntity.ok(ApiResponse.ok("Déconnexion réussie", null));
+    }
+
+    @Operation(summary = "Mot de passe oublié", description = "Envoie un lien de réinitialisation par email si le compte existe. Réponse générique dans tous les cas.")
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.email());
+        return ResponseEntity.ok(ApiResponse.ok(
+                "Si un compte existe avec cette adresse, un email de réinitialisation a été envoyé.", null));
+    }
+
+    @Operation(summary = "Réinitialiser le mot de passe", description = "Consomme le token reçu par email et définit le nouveau mot de passe.")
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request.token(), request.newPassword());
+        return ResponseEntity.ok(ApiResponse.ok("Mot de passe réinitialisé avec succès.", null));
     }
 }
