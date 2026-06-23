@@ -25,18 +25,21 @@ public class MerchantService {
     private final TenantRepository tenantRepository;
     private final MailService mailService;
 
+    @Transactional(readOnly = true)
     public List<MerchantResponse> listAll() {
         return merchantRepository.findAll().stream()
                 .map(MerchantResponse::from)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<MerchantResponse> listByTenant(UUID tenantId) {
         return merchantRepository.findAllByTenantId(tenantId).stream()
                 .map(MerchantResponse::from)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public MerchantResponse getById(UUID id) {
         return MerchantResponse.from(findOrThrow(id));
     }
