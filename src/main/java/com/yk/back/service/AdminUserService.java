@@ -36,6 +36,7 @@ public class AdminUserService {
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
 
+    @Transactional(readOnly = true)
     public List<AdminUserResponse> listAll() {
         List<AdminUserResponse> result = new ArrayList<>();
         tenantUserRepository.findAll().stream()
@@ -49,6 +50,7 @@ public class AdminUserService {
         return result;
     }
 
+    @Transactional(readOnly = true)
     public AdminUserResponse getById(UUID id, AdminUserType type) {
         return switch (type) {
             case TENANT_USER -> AdminUserResponse.fromTenantUser(findTenantUserOrThrow(id));

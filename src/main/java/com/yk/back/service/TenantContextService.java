@@ -30,6 +30,7 @@ public class TenantContextService {
     private final MerchantUserRepository merchantUserRepository;
     private final SubscriptionRepository subscriptionRepository;
 
+    @Transactional(readOnly = true)
     public TenantResponse getProfile(UUID tenantId) {
         Tenant tenant = findOrThrow(tenantId);
         long count = merchantRepository.findAllByTenantId(tenantId).size();
@@ -39,12 +40,14 @@ public class TenantContextService {
         return TenantResponse.from(tenant, count, sub);
     }
 
+    @Transactional(readOnly = true)
     public List<MerchantResponse> getMerchants(UUID tenantId) {
         return merchantRepository.findAllByTenantId(tenantId).stream()
                 .map(MerchantResponse::from)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public TenantDashboardResponse getDashboard(UUID tenantId) {
         SubscriptionResponse sub = subscriptionRepository
                 .findFirstByTenantIdOrderByCreatedAtDesc(tenantId)
@@ -57,6 +60,7 @@ public class TenantContextService {
         );
     }
 
+    @Transactional(readOnly = true)
     public MerchantResponse getActiveMerchant(UUID tenantId, UUID userId) {
         TenantUser user = findTenantUserOrThrow(tenantId, userId);
         return user.getActiveMerchant() != null ? MerchantResponse.from(user.getActiveMerchant()) : null;

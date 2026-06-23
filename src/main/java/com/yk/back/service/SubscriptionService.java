@@ -29,16 +29,19 @@ public class SubscriptionService {
     private final PlanRepository planRepository;
     private final MailService mailService;
 
+    @Transactional(readOnly = true)
     public List<SubscriptionResponse> listAll() {
         return subscriptionRepository.findAll().stream().map(SubscriptionResponse::from).toList();
     }
 
+    @Transactional(readOnly = true)
     public List<SubscriptionResponse> listByTenant(UUID tenantId) {
         return subscriptionRepository.findAllByTenantId(tenantId).stream()
                 .map(SubscriptionResponse::from)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public SubscriptionResponse getById(UUID id) {
         return SubscriptionResponse.from(findOrThrow(id));
     }

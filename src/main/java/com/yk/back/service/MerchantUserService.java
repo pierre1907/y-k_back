@@ -28,18 +28,21 @@ public class MerchantUserService {
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
 
+    @Transactional(readOnly = true)
     public List<MerchantUserResponse> listByMerchant(UUID merchantId, UUID tenantId) {
         return merchantUserRepository.findAllByMerchantIdAndTenantId(merchantId, tenantId).stream()
                 .map(MerchantUserResponse::from)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<MerchantUserResponse> listByTenant(UUID tenantId) {
         return merchantUserRepository.findAllByTenantId(tenantId).stream()
                 .map(MerchantUserResponse::from)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public MerchantUserResponse getById(UUID id, UUID tenantId) {
         return MerchantUserResponse.from(findOrThrow(id, tenantId));
     }
