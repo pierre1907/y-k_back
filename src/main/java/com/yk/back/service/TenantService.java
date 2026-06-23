@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.Base64;
@@ -34,6 +35,7 @@ import java.util.UUID;
 public class TenantService {
 
     private static final String ROLE_TENANT_ADMIN = "TENANT_ADMIN";
+    private static final String FREE_PLAN_NAME = "FREE";
     private static final long INVITE_TOKEN_VALIDITY_HOURS = 24;
     private static final long TRIAL_DURATION_DAYS = 7;
 
@@ -88,7 +90,7 @@ public class TenantService {
             provisionTenantAdmin(tenant, request.contactEmail());
         }
 
-        provisionTrialSubscription(tenant, request.planId());
+        provisionSubscription(tenant, request.planId());
 
         mailService.sendTenantCreated(adminEmail, adminName, tenant.getName());
 
@@ -153,20 +155,23 @@ public class TenantService {
         tenantRepository.delete(tenant);
     }
 
-    private void provisionTrialSubscription(Tenant tenant, UUID planId) {
+    private void provisionSubscription(Tenant tenant, UUID planId) {
         Plan plan = planId != null
                 ? planRepository.findById(planId)
                         .orElseThrow(() -> new ResourceNotFoundException("Plan", planId.toString()))
-                : planRepository.findFirstByIsActiveTrueOrderByPriceAsc()
+                : planRepository.findByName(FREE_PLAN_NAME)
                         .orElseThrow(() -> new BusinessException(
-                                "Aucun plan disponible pour démarrer l'essai", HttpStatus.CONFLICT));
+                                "Plan FREE introuvable, contactez le support", HttpStatus.CONFLICT));
 
+        boolean isFreePlan = plan.getPrice() == null || plan.getPrice().compareTo(BigDecimal.ZERO) == 0;
+
+        Subscription.Status status = isFreePlan ? Subscription.Status.ACTIVE : Subscription.Status.TRIAL;
         Subscription subscription = Subscription.builder()
                 .tenant(tenant)
                 .plan(plan)
-                .status(Subscription.Status.TRIAL)
+                .status(status)
                 .startsAt(OffsetDateTime.now())
-                .trialEndsAt(OffsetDateTime.now().plusDays(TRIAL_DURATION_DAYS))
+                .trialEndsAt(isFreePlan ? null : OffsetDateTime.now().plusDays(TRIAL_DURATION_DAYS))
                 .build();
         subscriptionRepository.save(subscription);
     }
