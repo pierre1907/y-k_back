@@ -4,11 +4,14 @@ import com.yk.back.dto.request.MerchantUserRequest;
 import com.yk.back.dto.response.MerchantUserResponse;
 import com.yk.back.entity.Merchant;
 import com.yk.back.entity.MerchantUser;
+import com.yk.back.entity.Plan;
+import com.yk.back.entity.Subscription;
 import com.yk.back.exception.BusinessException;
 import com.yk.back.exception.ForbiddenException;
 import com.yk.back.exception.ResourceNotFoundException;
 import com.yk.back.repository.MerchantRepository;
 import com.yk.back.repository.MerchantUserRepository;
+import com.yk.back.repository.SubscriptionRepository;
 import com.yk.back.service.mail.MailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,6 +28,7 @@ public class MerchantUserService {
 
     private final MerchantUserRepository merchantUserRepository;
     private final MerchantRepository merchantRepository;
+    private final SubscriptionRepository subscriptionRepository;
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
 
@@ -51,6 +55,16 @@ public class MerchantUserService {
     public MerchantUserResponse create(MerchantUserRequest request, UUID tenantId) {
         Merchant merchant = merchantRepository.findByIdAndTenantId(request.merchantId(), tenantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Merchant", request.merchantId().toString()));
+
+        Plan plan = getEnforceablePlan(tenantId);
+        if (plan.getMaxUsersPerMerchant() != null) {
+            long current = merchantUserRepository.countByMerchantId(merchant.getId());
+            if (current >= plan.getMaxUsersPerMerchant()) {
+                throw new BusinessException(
+                        "Quota atteint : votre plan autorise " + plan.getMaxUsersPerMerchant() + " utilisateur(s) maximum par marchand.",
+                        HttpStatus.PAYMENT_REQUIRED);
+            }
+        }
 
         if (merchantUserRepository.existsByEmailAndMerchantId(request.email(), merchant.getId())) {
             throw new BusinessException(
@@ -116,5 +130,13 @@ public class MerchantUserService {
     private MerchantUser findOrThrow(UUID id, UUID tenantId) {
         return merchantUserRepository.findByIdAndTenantId(id, tenantId)
                 .orElseThrow(() -> new ForbiddenException("Utilisateur introuvable ou accès refusé"));
+    }
+
+    private Plan getEnforceablePlan(UUID tenantId) {
+        Subscription subscription = subscriptionRepository.findFirstByTenantIdOrderByCreatedAtDesc(tenantId)
+                .filter(s -> s.getStatus() == Subscription.Status.TRIAL || s.getStatus() == Subscription.Status.ACTIVE)
+                .orElseThrow(() -> new BusinessException(
+                        "Aucun abonnement actif pour ce tenant. Contactez l'administrateur.", HttpStatus.PAYMENT_REQUIRED));
+        return subscription.getPlan();
     }
 }
