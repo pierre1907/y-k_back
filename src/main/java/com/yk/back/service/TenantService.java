@@ -3,18 +3,26 @@ package com.yk.back.service;
 import com.yk.back.dto.request.TenantRequest;
 import com.yk.back.dto.response.SubscriptionResponse;
 import com.yk.back.dto.response.TenantResponse;
+import com.yk.back.entity.PasswordResetToken;
 import com.yk.back.entity.Tenant;
+import com.yk.back.entity.TenantUser;
 import com.yk.back.exception.BusinessException;
-import org.springframework.http.HttpStatus;
 import com.yk.back.exception.ResourceNotFoundException;
 import com.yk.back.repository.MerchantRepository;
+import com.yk.back.repository.PasswordResetTokenRepository;
 import com.yk.back.repository.SubscriptionRepository;
 import com.yk.back.repository.TenantRepository;
+import com.yk.back.repository.TenantUserRepository;
 import com.yk.back.service.mail.MailService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
+import java.time.OffsetDateTime;
+import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,23 +30,26 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TenantService {
 
+    private static final String ROLE_TENANT_ADMIN = "TENANT_ADMIN";
+    private static final long INVITE_TOKEN_VALIDITY_HOURS = 24;
+
     private final TenantRepository tenantRepository;
+    private final TenantUserRepository tenantUserRepository;
     private final MerchantRepository merchantRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
+    private final SecureRandom secureRandom = new SecureRandom();
 
     @Transactional(readOnly = true)
     public List<TenantResponse> listAll() {
-        return tenantRepository.findAll().stream()
-                .map(t -> {
-                    long count = merchantRepository.findAllByTenantId(t.getId()).size();
-                    SubscriptionResponse sub = subscriptionRepository
-                            .findFirstByTenantIdOrderByCreatedAtDesc(t.getId())
-                            .map(SubscriptionResponse::from)
-                            .orElse(null);
-                    return TenantResponse.from(t, count, sub);
-                })
-                .toList();
+        return toResponses(tenantRepository.findAllByArchivedAtIsNull());
+    }
+
+    @Transactional(readOnly = true)
+    public List<TenantResponse> listArchived() {
+        return toResponses(tenantRepository.findAllByArchivedAtIsNotNull());
     }
 
     @Transactional(readOnly = true)
@@ -67,6 +78,11 @@ public class TenantService {
                 .build();
 
         tenant = tenantRepository.save(tenant);
+
+        if (request.contactEmail() != null && !request.contactEmail().isBlank()) {
+            provisionTenantAdmin(tenant, request.contactEmail());
+        }
+
         mailService.sendTenantCreated(adminEmail, adminName, tenant.getName());
 
         return TenantResponse.from(tenant);
@@ -101,6 +117,74 @@ public class TenantService {
         tenant.setActive(false);
         tenantRepository.save(tenant);
         return TenantResponse.from(tenant);
+    }
+
+    @Transactional
+    public TenantResponse archive(UUID id) {
+        Tenant tenant = findOrThrow(id);
+        if (tenant.getArchivedAt() != null) {
+            throw new BusinessException("Ce tenant est déjà archivé", HttpStatus.CONFLICT);
+        }
+        tenant.setArchivedAt(OffsetDateTime.now());
+        tenant.setActive(false);
+        return TenantResponse.from(tenantRepository.save(tenant));
+    }
+
+    @Transactional
+    public TenantResponse restore(UUID id) {
+        Tenant tenant = findOrThrow(id);
+        if (tenant.getArchivedAt() == null) {
+            throw new BusinessException("Ce tenant n'est pas archivé", HttpStatus.CONFLICT);
+        }
+        tenant.setArchivedAt(null);
+        return TenantResponse.from(tenantRepository.save(tenant));
+    }
+
+    @Transactional
+    public void delete(UUID id) {
+        Tenant tenant = findOrThrow(id);
+        tenantRepository.delete(tenant);
+    }
+
+    private void provisionTenantAdmin(Tenant tenant, String email) {
+        TenantUser admin = TenantUser.builder()
+                .tenant(tenant)
+                .fullName(tenant.getName() + " — Admin")
+                .email(email)
+                .password(passwordEncoder.encode(randomToken()))
+                .role(ROLE_TENANT_ADMIN)
+                .build();
+        tenantUserRepository.save(admin);
+
+        String token = randomToken();
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .email(email)
+                .token(token)
+                .expiresAt(OffsetDateTime.now().plusHours(INVITE_TOKEN_VALIDITY_HOURS))
+                .used(false)
+                .build();
+        passwordResetTokenRepository.save(resetToken);
+
+        mailService.sendTenantAdminInvite(email, tenant.getName(), token);
+    }
+
+    private String randomToken() {
+        byte[] bytes = new byte[32];
+        secureRandom.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    private List<TenantResponse> toResponses(List<Tenant> tenants) {
+        return tenants.stream()
+                .map(t -> {
+                    long count = merchantRepository.findAllByTenantId(t.getId()).size();
+                    SubscriptionResponse sub = subscriptionRepository
+                            .findFirstByTenantIdOrderByCreatedAtDesc(t.getId())
+                            .map(SubscriptionResponse::from)
+                            .orElse(null);
+                    return TenantResponse.from(t, count, sub);
+                })
+                .toList();
     }
 
     private Tenant findOrThrow(UUID id) {

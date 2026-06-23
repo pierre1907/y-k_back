@@ -11,6 +11,7 @@ public record TenantResponse(
         String slug,
         String contactEmail,
         boolean isActive,
+        OffsetDateTime archivedAt,
         OffsetDateTime createdAt,
         long merchantCount,
         SubscriptionResponse activeSubscription
@@ -22,6 +23,7 @@ public record TenantResponse(
                 t.getSlug(),
                 t.getContactEmail(),
                 t.isActive(),
+                t.getArchivedAt(),
                 t.getCreatedAt(),
                 merchantCount,
                 sub

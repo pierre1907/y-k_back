@@ -120,6 +120,21 @@ public class MailService {
     }
 
     @Async
+    public void sendTenantAdminInvite(String to, String tenantName, String token) {
+        String setupUrl = appProperties.getMail().getBaseUrl() + "/reset-password?token=" + token;
+        String subject = "Votre espace " + tenantName + " est prêt — définissez votre mot de passe";
+        String body = """
+                <h2>Bienvenue sur Y&K Platform,</h2>
+                <p>Le tenant <strong>%s</strong> vient d'être créé et vous avez été désigné comme administrateur.</p>
+                <p>Définissez votre mot de passe pour activer votre compte (lien valable 24h) :</p>
+                <p><a href="%s">Définir mon mot de passe</a></p>
+                <hr/>
+                <p style="color:#888;font-size:12px;">Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+                """.formatted(tenantName, setupUrl);
+        send(to, subject, body);
+    }
+
+    @Async
     public void sendMerchantCreated(String to, String adminName, String merchantName, String tenantName) {
         String subject = "Nouveau merchant créé : " + merchantName;
         String body = """

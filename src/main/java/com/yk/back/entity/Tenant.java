@@ -31,6 +31,9 @@ public class Tenant {
     @Column(nullable = false)
     private boolean isActive = true;
 
+    @Column(name = "archived_at")
+    private OffsetDateTime archivedAt;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private OffsetDateTime createdAt;
