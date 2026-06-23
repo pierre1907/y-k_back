@@ -4,12 +4,15 @@ import com.yk.back.dto.request.TenantRequest;
 import com.yk.back.dto.response.SubscriptionResponse;
 import com.yk.back.dto.response.TenantResponse;
 import com.yk.back.entity.PasswordResetToken;
+import com.yk.back.entity.Plan;
+import com.yk.back.entity.Subscription;
 import com.yk.back.entity.Tenant;
 import com.yk.back.entity.TenantUser;
 import com.yk.back.exception.BusinessException;
 import com.yk.back.exception.ResourceNotFoundException;
 import com.yk.back.repository.MerchantRepository;
 import com.yk.back.repository.PasswordResetTokenRepository;
+import com.yk.back.repository.PlanRepository;
 import com.yk.back.repository.SubscriptionRepository;
 import com.yk.back.repository.TenantRepository;
 import com.yk.back.repository.TenantUserRepository;
@@ -32,11 +35,13 @@ public class TenantService {
 
     private static final String ROLE_TENANT_ADMIN = "TENANT_ADMIN";
     private static final long INVITE_TOKEN_VALIDITY_HOURS = 24;
+    private static final long TRIAL_DURATION_DAYS = 7;
 
     private final TenantRepository tenantRepository;
     private final TenantUserRepository tenantUserRepository;
     private final MerchantRepository merchantRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final PlanRepository planRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final MailService mailService;
@@ -82,6 +87,8 @@ public class TenantService {
         if (request.contactEmail() != null && !request.contactEmail().isBlank()) {
             provisionTenantAdmin(tenant, request.contactEmail());
         }
+
+        provisionTrialSubscription(tenant, request.planId());
 
         mailService.sendTenantCreated(adminEmail, adminName, tenant.getName());
 
@@ -144,6 +151,24 @@ public class TenantService {
     public void delete(UUID id) {
         Tenant tenant = findOrThrow(id);
         tenantRepository.delete(tenant);
+    }
+
+    private void provisionTrialSubscription(Tenant tenant, UUID planId) {
+        Plan plan = planId != null
+                ? planRepository.findById(planId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Plan", planId.toString()))
+                : planRepository.findFirstByIsActiveTrueOrderByPriceAsc()
+                        .orElseThrow(() -> new BusinessException(
+                                "Aucun plan disponible pour démarrer l'essai", HttpStatus.CONFLICT));
+
+        Subscription subscription = Subscription.builder()
+                .tenant(tenant)
+                .plan(plan)
+                .status(Subscription.Status.TRIAL)
+                .startsAt(OffsetDateTime.now())
+                .trialEndsAt(OffsetDateTime.now().plusDays(TRIAL_DURATION_DAYS))
+                .build();
+        subscriptionRepository.save(subscription);
     }
 
     private void provisionTenantAdmin(Tenant tenant, String email) {

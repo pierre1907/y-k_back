@@ -3,11 +3,14 @@ package com.yk.back.service;
 import com.yk.back.dto.request.MerchantRequest;
 import com.yk.back.dto.response.MerchantResponse;
 import com.yk.back.entity.Merchant;
+import com.yk.back.entity.Plan;
+import com.yk.back.entity.Subscription;
 import com.yk.back.entity.Tenant;
 import com.yk.back.exception.BusinessException;
 import org.springframework.http.HttpStatus;
 import com.yk.back.exception.ResourceNotFoundException;
 import com.yk.back.repository.MerchantRepository;
+import com.yk.back.repository.SubscriptionRepository;
 import com.yk.back.repository.TenantRepository;
 import com.yk.back.service.mail.MailService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,7 @@ public class MerchantService {
 
     private final MerchantRepository merchantRepository;
     private final TenantRepository tenantRepository;
+    private final SubscriptionRepository subscriptionRepository;
     private final MailService mailService;
 
     @Transactional(readOnly = true)
@@ -48,6 +52,16 @@ public class MerchantService {
     public MerchantResponse create(MerchantRequest request, String adminEmail, String adminName) {
         Tenant tenant = tenantRepository.findById(request.tenantId())
                 .orElseThrow(() -> new ResourceNotFoundException("Tenant", request.tenantId().toString()));
+
+        Plan plan = getEnforceablePlan(tenant.getId());
+        if (plan.getMaxMerchants() != null) {
+            long current = merchantRepository.findAllByTenantId(tenant.getId()).size();
+            if (current >= plan.getMaxMerchants()) {
+                throw new BusinessException(
+                        "Quota atteint : votre plan autorise " + plan.getMaxMerchants() + " marchand(s) maximum.",
+                        HttpStatus.PAYMENT_REQUIRED);
+            }
+        }
 
         String slug = resolveSlug(request.slug(), request.name());
         if (merchantRepository.existsBySlugAndTenantId(slug, tenant.getId())) {
@@ -93,6 +107,14 @@ public class MerchantService {
         Merchant merchant = findOrThrow(id);
         merchant.setActive(false);
         return MerchantResponse.from(merchantRepository.save(merchant));
+    }
+
+    private Plan getEnforceablePlan(UUID tenantId) {
+        Subscription subscription = subscriptionRepository.findFirstByTenantIdOrderByCreatedAtDesc(tenantId)
+                .filter(s -> s.getStatus() == Subscription.Status.TRIAL || s.getStatus() == Subscription.Status.ACTIVE)
+                .orElseThrow(() -> new BusinessException(
+                        "Aucun abonnement actif pour ce tenant. Contactez l'administrateur.", HttpStatus.PAYMENT_REQUIRED));
+        return subscription.getPlan();
     }
 
     private Merchant findOrThrow(UUID id) {
