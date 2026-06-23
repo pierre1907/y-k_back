@@ -12,5 +12,5 @@ import java.util.UUID;
 public interface PlanRepository extends JpaRepository<Plan, UUID> {
     List<Plan> findAllByIsActiveTrue();
     boolean existsByName(String name);
-    Optional<Plan> findFirstByIsActiveTrueOrderByPriceAsc();
+    Optional<Plan> findByName(String name);
 }
