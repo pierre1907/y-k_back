@@ -4,6 +4,7 @@ import com.yk.back.entity.Tenant;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,4 +14,6 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
     boolean existsBySlug(String slug);
     boolean existsByName(String name);
     long countByIsActiveTrue();
+    List<Tenant> findAllByArchivedAtIsNull();
+    List<Tenant> findAllByArchivedAtIsNotNull();
 }
